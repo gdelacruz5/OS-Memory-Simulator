@@ -1,0 +1,294 @@
+- based on program in book page 482
+
+- ONLY implement reads
+	- NO writes
+
+- TLB
+	- populated on FCFS basis
+	- use a index = index + 1 % 16 for this
+		- index starts at 0
+
+- Page Table
+
+- From book
+	- 2^16 bytes or 64 MB of virtual mem
+	- use a TLB and page table to translate each logical address to its corresponding physical address and output the value of the byte stored at the transalted physical address
+		- must read mem at address
+
+		- need to implement the RAM to hold memory
+			- a series of "frames" that hold data
+
+	- will read 32-bit integer numbers but only need to be concerned with 16-bit addresses
+		- mask rightmost(? not leftmost?) bits of each logical address
+	- divided into page number and page offset
+
+	- get page number
+	- check TLB for frame number
+	- if not there check page table
+	- if not there then check backing store
+
+	- uses demand paging
+
+Output
+- for each address:
+	- full address (from the reference file)
+	- value of the byte referenced (1 signed integer)
+	- physical memory frame number (1 positive integer)
+	- the content of the entire frame (256 bytes in hex ascii characters, no spaces)
+	- new line character
+
+- At end report
+	- total number of page faults and a % page fault rate
+	- total unumber of TLB hits and misses and % TLB miss rate
+
+- types of replacement strategies to be implemented
+	- FIFO
+	- LRU
+	- OPT
+		- How?
+
+- Variable number of frames
+	- means variable number of physical memory
+	- physical memeory size = 256 (size of page/frame in bytes) * FRAMES
+
+- page table has a present bit associated with it
+
+- will the backing store always be a file just called "BACKING_STORE.bin"?
+
+- what does the reference need?
+	- the page and the page offset
+	- 8 bits each (or one byte)
+		- should I have 2 chars?
+	
+- Why does it say you don't need FIFO until frames < 256?
+	- Don't you need some page replacement strategy for the TLB?
+		- ask about this
+	- TLB is always FCFS and FIFO replacement!
+	- will TLB will have 16 nodes or number of frame nodes if frame nodes < 16
+
+-------------------------------------------------
+
+questions
+
+- Will the backing store always be called "BACKING_STORE.bin"?
+	- can we hardcode that?
+
+- Why do we need the present bit in the page table?
+	- If there are less than 256 Frames then why would I keep 256 frames in the page table?
+	- maybe just have an array and then a linked list/queue to define what comes next and whatever
+	- linked list/queue will have nodes = number of frames
+---------------------------------------------------------------------
+
+RoadMap
+
+1) open and read a file
+	- open -- done
+	- read -- done
+
+2) parse an int into its bits -- done
+
+3) read a bin file byte by byte in -- done
+	- print out block in HEX ascii characters
+		- use fread()
+
+4) implement page table -- done
+
+5) implement TLB -- done
+
+6) implement variable FRAMES with FIFO
+	- make a queue for page table
+
+7) implement LRU
+
+8) implement OPT
+---------------------------------------------------------------
+
+4) implement page table
+
+- have an array[256] of page table structs
+	- where index == page
+typdef struct{
+	int frame;
+	int pres;
+} Page
+
+- create and set all present bits to zero
+
+- have global frame number 
+	- starts at zero and goes to FRAMES - 1
+
+- give a new page.frame = Frame
+	- then Frame++;
+
+- if there must be replacements then
+	- get frame from page being pushed out
+	- set present bit to 0
+
+	- give new page the frame
+	- set present bit to 1
+
+- change pages to pageT
+--------------------------------------------------------------------------
+
+6) implement variable FRAMES with FIFO
+	- make a queue for page table
+
+1) check pageT
+	- if pres then return the frame
+	- if not then go to step 2
+2) 
+2.1) if elements in queue are less than RFRAMES (use getMaxIndex(Head))
+	- make a new node
+	- value = page (needed to set pres bit to 0 on replacement)
+	- frame = Frame
+		- Frame ++
+	- add new node to tail
+	- set pres bit to 1
+		- PageFaults++;
+	- return frame
+2.2) if elements in queue are greater than or equal to RFRAMES
+	- get head node
+	- get page and frame
+	- set pres bit to 0 (of head page)
+	- just like 2.1)
+	- make a new node
+	- value = referenced page
+	- frame = frame taken
+	- add new node to tail
+	- set pres bit to 1
+		- PageFaults++;
+	- return frame
+
+
+//checks to see if the page is in the page table, gives a new frame and increments
+int checkPageT(int page, Page pageT[], ListNode *pageQ){
+
+   if (pageT[page].pres == 0)
+   {
+      if (getMaxIndex(pageQ) >= RFRAMES) //or you could use Frames for this
+      {
+		if (OPT)
+		{
+			index = getLastUsed(*PageQ, refs, int where we are in the refs, the numRefs (global), *pageToDelete, *newFrame);
+			*PageQ = deleteNode(*PageQ, index)
+			pageT[pageToDelete].pres = 0;
+			
+		}
+		else{ //for FIFO or LRU
+			deletePage = pageQ->value
+			newFrame = pageQ->frame
+			deleteNode(pageQ, 0)
+			pageT[deletPage].pres = 0;
+		}
+			
+      }
+      else
+	{
+		newFrame = Frame;
+		Frame++;
+	}
+	addTail(pageQ, page, newFrame);
+      pageT[page].frame = newFrame;
+      //Frame = (Frame + 1) % RFRAMES;
+      pageT[page].pres = 1;
+      PageFaults++;
+   }
+	else if (PRA == LRU) //moves the referenced node to the back of the queue
+	{
+		inndex = getIndex(*PageQ, page)
+		*PageQ = deleteNode(*PageQ, index)
+		*PageQ = addTail(*PageQ, page, pageT[page].frame)
+	}
+
+   return pageT[page].frame;
+}
+
+int getLastUsed(*PageQ, refs, int where we are in the refs (, the numRefs (global?), *pageToDelete, *newFrame)
+{
+	if (PageQ == NULL)
+	{ 
+		return bestInd;
+	}
+	else
+	{
+		
+	}
+}
+
+------------------------------------------------------------------
+
+deleted page = check page T
+
+if ((index = isInTLB(deletedPage)) != -1)
+{
+	TLBHead = deleteNode(TLBHead, index)
+}
+else
+{
+	TLBHead = deleteNode(TLBHead, 0)
+}
+
+then TLBHead = addTail(TLBHEAd, newPage, newFrame)
+
+if it deleted something check if its in the thing
+	- if its in the thing then delete it
+	- if its not in the thing then check if there are too many TLBs
+		- delete head if necessary
+
+if it did not delete anything then
+	- check if theree are too many TLBs and delete if necessary
+
+addtail etc. 
+
+-------------------------------------------------------------------------
+
+int (page) getLastUsed(){
+
+	int whenUsed = 0;
+	int thisPage = ptr->value;
+	int i;
+	int rest;	
+
+	if (ptr == NULL)
+	{
+		return -1;
+	}
+	else
+	{
+		for(i = currentRef + 1; (thisPage == refs[i]) || (i >= numRefs); i++)
+		{
+			whenUsed++;
+		}
+		
+		if (whenUsed >= 
+	}
+}
+
+OR
+
+int (page) getLastUsed(){
+	
+	int pageToDelete = ptr->value;
+	int pageToDeleteInd = -1;
+	int whenUsed = 0;
+
+	while (ptr != NULL)
+	{
+		for(i = currentRef + 1; (ptr->value == refs[i].page) || (i >= numRefs); I++)
+		{
+			whenUsed++;
+		}
+		if (pageToDeleteInd > whenUsed)
+		{
+			pageToDelete = ptr->value;
+			pageToDeleteInd = whenUsed;
+		}
+			
+		whenUsed = 0;
+	}
+	
+	return pageToDelete;
+}
+
+make refs a global
+make numRefs a global
